@@ -88,8 +88,4 @@ flutter build apk --release
 **Mohammed Emad Elrefy** — Al-Aqsa University, Department of Computer Science
 Software Engineering Project — Supervisor: Eng. Firas Fouad Al-ijla
 
----
 
-## 📝 License
-
-This project was developed for educational purposes as part of a university Software Engineering course.
