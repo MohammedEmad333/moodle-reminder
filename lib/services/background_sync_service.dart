@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'calendar_repository.dart';
@@ -8,6 +9,7 @@ const _backgroundUniqueName = 'moodle-calendar-periodic-sync';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
+  WidgetsFlutterBinding.ensureInitialized();
   Workmanager().executeTask((taskName, inputData) async {
     if (taskName != _backgroundTaskName) return true;
 
@@ -27,8 +29,8 @@ void callbackDispatcher() {
       );
       return true;
     } catch (_) {
-      // WorkManager will try again on the next periodic run. Returning true
-      // avoids an aggressive retry loop for invalid/expired Moodle tokens.
+      // The next periodic run will retry. Avoid an aggressive retry loop for
+      // invalid or expired Moodle calendar tokens.
       return true;
     }
   });
