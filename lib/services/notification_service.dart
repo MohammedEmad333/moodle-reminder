@@ -69,8 +69,9 @@ class NotificationService {
 
     final now = DateTime.now();
     for (final deadline in deadlines) {
-      if (deadline.isPast || completedIds.contains(deadline.stableKey))
+      if (deadline.isPast || completedIds.contains(deadline.stableKey)) {
         continue;
+      }
 
       for (final hours in reminderOffsetsHours.toSet()) {
         final fireAt = deadline.due.subtract(Duration(hours: hours));

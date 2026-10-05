@@ -748,7 +748,7 @@ class _HeroCard extends StatelessWidget {
               Text(
                 t('NEXT DEADLINE', 'الموعد التالي'),
                 style: TextStyle(
-                  color: scheme.onPrimary.withOpacity(.8),
+                  color: scheme.onPrimary.withValues(alpha: .8),
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -774,7 +774,7 @@ class _HeroCard extends StatelessWidget {
                   'Last synced ${DateFormat.jm().format(lastSync!)}',
                   'آخر مزامنة ${DateFormat.jm().format(lastSync!)}',
                 ),
-                style: TextStyle(color: scheme.onPrimary.withOpacity(.8)),
+                style: TextStyle(color: scheme.onPrimary.withValues(alpha: .8)),
               ),
             ],
           ],
