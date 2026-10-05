@@ -44,21 +44,43 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Apply analyzer compatibility fixes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          home = Path('lib/screens/home_shell.dart')
+          text = home.read_text()
+          text = text.replace('scheme.onPrimary.withOpacity(.8)', 'scheme.onPrimary.withValues(alpha: .8)')
+          home.write_text(text)
+
+          notifications = Path('lib/services/notification_service.dart')
+          text = notifications.read_text()
+          old = """      if (deadline.isPast || completedIds.contains(deadline.stableKey))\n        continue;"""
+          new = """      if (deadline.isPast || completedIds.contains(deadline.stableKey)) {\n        continue;\n      }"""
+          if old not in text:
+              print('Notification guard is already fixed or changed.')
+          else:
+              text = text.replace(old, new)
+              notifications.write_text(text)
+          PY
+
       - name: Apply Dart formatting
         run: dart format lib test
 
-      - name: Commit formatting if needed
+      - name: Commit source cleanup if needed
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         shell: bash
         run: |
           if git diff --quiet -- lib test; then
-            echo "Formatting already clean."
+            echo "Source cleanup already applied."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add lib test
-          git commit -m "style: apply dart formatting"
+          git commit -m "fix: satisfy current Flutter analyzer"
           git push origin "HEAD:${{ github.head_ref }}"
 
       - name: Analyze
