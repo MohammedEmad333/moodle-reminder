@@ -37,13 +37,16 @@ class NotificationService {
 
     if (!requestPermissions) return;
 
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await android?.requestNotificationsPermission();
     await android?.requestExactAlarmsPermission();
     await _plugin
         .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
+          IOSFlutterLocalNotificationsPlugin
+        >()
         ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
@@ -55,8 +58,10 @@ class NotificationService {
     await init(requestPermissions: false);
     await _plugin.cancelAll();
 
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     final canScheduleExact = await android?.canScheduleExactNotifications();
     final scheduleMode = canScheduleExact == false
         ? AndroidScheduleMode.inexactAllowWhileIdle
@@ -64,7 +69,8 @@ class NotificationService {
 
     final now = DateTime.now();
     for (final deadline in deadlines) {
-      if (deadline.isPast || completedIds.contains(deadline.stableKey)) continue;
+      if (deadline.isPast || completedIds.contains(deadline.stableKey))
+        continue;
 
       for (final hours in reminderOffsetsHours.toSet()) {
         final fireAt = deadline.due.subtract(Duration(hours: hours));

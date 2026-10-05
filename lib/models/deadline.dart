@@ -45,17 +45,17 @@ class Deadline {
   }
 
   Map<String, dynamic> toJson() => {
-        'uid': uid,
-        'title': title,
-        'due': due.toIso8601String(),
-        'description': description,
-        'course': course,
-        'url': url,
-        'location': location,
-        'status': status,
-        'sequence': sequence,
-        'lastModified': lastModified?.toIso8601String(),
-      };
+    'uid': uid,
+    'title': title,
+    'due': due.toIso8601String(),
+    'description': description,
+    'course': course,
+    'url': url,
+    'location': location,
+    'status': status,
+    'sequence': sequence,
+    'lastModified': lastModified?.toIso8601String(),
+  };
 
   factory Deadline.fromJson(Map<String, dynamic> json) {
     final dueValue = json['due'];

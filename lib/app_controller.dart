@@ -135,7 +135,9 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> setLocale(Locale value) async {
-    locale = value.languageCode == 'ar' ? const Locale('ar') : const Locale('en');
+    locale = value.languageCode == 'ar'
+        ? const Locale('ar')
+        : const Locale('en');
     await _repository.saveLocale(locale.languageCode);
     notifyListeners();
   }

@@ -36,14 +36,16 @@ END:VCALENDAR''';
     });
 
     test('unfolds continuation lines', () {
-      const raw = '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:x\nSUMMARY:A very long assignment\n title\nDTSTART:20310101T120000Z\nEND:VEVENT\nEND:VCALENDAR''';
+      const raw =
+          '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:x\nSUMMARY:A very long assignment\n title\nDTSTART:20310101T120000Z\nEND:VEVENT\nEND:VCALENDAR''';
 
       final result = IcsParser.parse(raw);
       expect(result.single.title, 'A very long assignmenttitle');
     });
 
     test('treats date-only events as end of day', () {
-      const raw = '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:y\nSUMMARY:Exam day\nDTSTART;VALUE=DATE:20320520\nEND:VEVENT\nEND:VCALENDAR''';
+      const raw =
+          '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:y\nSUMMARY:Exam day\nDTSTART;VALUE=DATE:20320520\nEND:VEVENT\nEND:VCALENDAR''';
 
       final result = IcsParser.parse(raw);
       expect(result.single.due.hour, 23);
@@ -51,7 +53,8 @@ END:VCALENDAR''';
     });
 
     test('skips malformed events instead of crashing the feed', () {
-      const raw = '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nSUMMARY:Broken\nDTSTART:not-a-date\nEND:VEVENT\nBEGIN:VEVENT\nUID:valid\nSUMMARY:Valid\nDTSTART:20350101T120000Z\nEND:VEVENT\nEND:VCALENDAR''';
+      const raw =
+          '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nSUMMARY:Broken\nDTSTART:not-a-date\nEND:VEVENT\nBEGIN:VEVENT\nUID:valid\nSUMMARY:Valid\nDTSTART:20350101T120000Z\nEND:VEVENT\nEND:VCALENDAR''';
 
       final result = IcsParser.parse(raw);
       expect(result, hasLength(1));

@@ -16,11 +16,9 @@ class CalendarSyncException implements Exception {
 }
 
 class CalendarRepository {
-  CalendarRepository({
-    http.Client? client,
-    FlutterSecureStorage? secureStorage,
-  })  : _client = client ?? http.Client(),
-        _secureStorage = secureStorage ?? const FlutterSecureStorage();
+  CalendarRepository({http.Client? client, FlutterSecureStorage? secureStorage})
+    : _client = client ?? http.Client(),
+      _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   static const _secureCalendarUrlKey = 'moodle_calendar_url';
   static const _legacyCalendarUrlKey = 'calendar_url';
@@ -114,10 +112,11 @@ class CalendarRepository {
       );
     }
 
-    final upcoming = IcsParser.parse(response.body)
-        .where((deadline) => !deadline.isPast)
-        .toList()
-      ..sort((a, b) => a.due.compareTo(b.due));
+    final upcoming =
+        IcsParser.parse(
+            response.body,
+          ).where((deadline) => !deadline.isPast).toList()
+          ..sort((a, b) => a.due.compareTo(b.due));
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
@@ -149,13 +148,14 @@ class CalendarRepository {
     if (raw == null) return const [24, 6, 1];
     if (raw.isEmpty) return const [];
 
-    final values = raw
-        .map(int.tryParse)
-        .whereType<int>()
-        .where((hours) => hours > 0)
-        .toSet()
-        .toList()
-      ..sort((a, b) => b.compareTo(a));
+    final values =
+        raw
+            .map(int.tryParse)
+            .whereType<int>()
+            .where((hours) => hours > 0)
+            .toSet()
+            .toList()
+          ..sort((a, b) => b.compareTo(a));
     return values.isEmpty ? const [24, 6, 1] : values;
   }
 

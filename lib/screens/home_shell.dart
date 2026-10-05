@@ -56,12 +56,7 @@ class _HomeShellState extends State<HomeShell> {
       ),
       body: IndexedStack(
         index: _index,
-        children: [
-          _home(),
-          _calendar(),
-          _courses(),
-          _settings(),
-        ],
+        children: [_home(), _calendar(), _courses(), _settings()],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
@@ -119,7 +114,10 @@ class _HomeShellState extends State<HomeShell> {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
           _HeroCard(
-            title: t('$weekCount deadlines this week', '$weekCount مواعيد هذا الأسبوع'),
+            title: t(
+              '$weekCount deadlines this week',
+              '$weekCount مواعيد هذا الأسبوع',
+            ),
             next: next,
             lastSync: controller.lastSync,
             isArabic: _ar,
@@ -135,13 +133,19 @@ class _HomeShellState extends State<HomeShell> {
             ),
           ],
           const SizedBox(height: 18),
-          _section(t('Upcoming deadlines', 'المواعيد القادمة'), '${deadlines.length}'),
+          _section(
+            t('Upcoming deadlines', 'المواعيد القادمة'),
+            '${deadlines.length}',
+          ),
           const SizedBox(height: 8),
           if (deadlines.isEmpty)
             _empty(
               Icons.task_alt_rounded,
               t('You are all caught up', 'لا توجد مواعيد قادمة'),
-              t('Pull down to sync your Moodle calendar.', 'اسحب للأسفل لمزامنة تقويم Moodle.'),
+              t(
+                'Pull down to sync your Moodle calendar.',
+                'اسحب للأسفل لمزامنة تقويم Moodle.',
+              ),
             )
           else
             ...deadlines.take(15).map(_deadlineCard),
@@ -181,7 +185,9 @@ class _HomeShellState extends State<HomeShell> {
         ),
         const SizedBox(height: 16),
         _section(
-          DateFormat.yMMMMd(widget.controller.locale.languageCode).format(_selectedDate),
+          DateFormat.yMMMMd(
+            widget.controller.locale.languageCode,
+          ).format(_selectedDate),
           '${items.length}',
         ),
         const SizedBox(height: 8),
@@ -189,7 +195,10 @@ class _HomeShellState extends State<HomeShell> {
           _empty(
             Icons.event_available_outlined,
             t('Nothing due on this day', 'لا يوجد تسليم في هذا اليوم'),
-            t('Choose another date to inspect your agenda.', 'اختر تاريخًا آخر لعرض المواعيد.'),
+            t(
+              'Choose another date to inspect your agenda.',
+              'اختر تاريخًا آخر لعرض المواعيد.',
+            ),
           )
         else
           ...items.map(_deadlineCard),
@@ -200,7 +209,9 @@ class _HomeShellState extends State<HomeShell> {
   Widget _courses() {
     final grouped = <String, List<Deadline>>{};
     for (final deadline in widget.controller.activeDeadlines) {
-      final course = deadline.course.isEmpty ? t('Other', 'أخرى') : deadline.course;
+      final course = deadline.course.isEmpty
+          ? t('Other', 'أخرى')
+          : deadline.course;
       grouped.putIfAbsent(course, () => []).add(deadline);
     }
     final entries = grouped.entries.toList()
@@ -215,7 +226,10 @@ class _HomeShellState extends State<HomeShell> {
           _empty(
             Icons.school_outlined,
             t('No courses yet', 'لا توجد مساقات بعد'),
-            t('Courses appear after the first successful sync.', 'ستظهر المساقات بعد أول مزامنة ناجحة.'),
+            t(
+              'Courses appear after the first successful sync.',
+              'ستظهر المساقات بعد أول مزامنة ناجحة.',
+            ),
           )
         else
           ...entries.map((entry) {
@@ -223,9 +237,16 @@ class _HomeShellState extends State<HomeShell> {
             return Card(
               child: ListTile(
                 leading: CircleAvatar(
-                  child: Text(entry.key.isEmpty ? '?' : entry.key.substring(0, 1).toUpperCase()),
+                  child: Text(
+                    entry.key.isEmpty
+                        ? '?'
+                        : entry.key.substring(0, 1).toUpperCase(),
+                  ),
                 ),
-                title: Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w700)),
+                title: Text(
+                  entry.key,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
                 subtitle: Text(
                   t(
                     '${entry.value.length} upcoming • next ${next.remainingText}',
@@ -274,14 +295,16 @@ class _HomeShellState extends State<HomeShell> {
             initialValue: controller.themeMode,
             decoration: InputDecoration(labelText: t('Theme', 'السمة')),
             items: ThemeMode.values
-                .map((mode) => DropdownMenuItem(
-                      value: mode,
-                      child: Text(switch (mode) {
-                        ThemeMode.system => t('System', 'النظام'),
-                        ThemeMode.light => t('Light', 'فاتح'),
-                        ThemeMode.dark => t('Dark', 'داكن'),
-                      }),
-                    ))
+                .map(
+                  (mode) => DropdownMenuItem(
+                    value: mode,
+                    child: Text(switch (mode) {
+                      ThemeMode.system => t('System', 'النظام'),
+                      ThemeMode.light => t('Light', 'فاتح'),
+                      ThemeMode.dark => t('Dark', 'داكن'),
+                    }),
+                  ),
+                )
                 .toList(),
             onChanged: (value) {
               if (value != null) controller.setThemeMode(value);
@@ -297,7 +320,8 @@ class _HomeShellState extends State<HomeShell> {
               ButtonSegment(value: 'ar', label: Text('العربية')),
             ],
             selected: {controller.locale.languageCode},
-            onSelectionChanged: (value) => controller.setLocale(Locale(value.first)),
+            onSelectionChanged: (value) =>
+                controller.setLocale(Locale(value.first)),
           ),
         ),
         const SizedBox(height: 12),
@@ -320,7 +344,12 @@ class _HomeShellState extends State<HomeShell> {
               ListTile(
                 leading: const Icon(Icons.lock_outline_rounded),
                 title: Text(t('Private calendar URL', 'رابط التقويم الخاص')),
-                subtitle: Text(t('Stored in secure device storage', 'محفوظ في التخزين الآمن للجهاز')),
+                subtitle: Text(
+                  t(
+                    'Stored in secure device storage',
+                    'محفوظ في التخزين الآمن للجهاز',
+                  ),
+                ),
               ),
             ],
           ),
@@ -336,7 +365,9 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Widget _deadlineCard(Deadline deadline) {
-    final completed = widget.controller.completedIds.contains(deadline.stableKey);
+    final completed = widget.controller.completedIds.contains(
+      deadline.stableKey,
+    );
     final color = _urgency(deadline);
     return Card(
       child: ListTile(
@@ -353,10 +384,12 @@ class _HomeShellState extends State<HomeShell> {
             decoration: completed ? TextDecoration.lineThrough : null,
           ),
         ),
-        subtitle: Text([
-          if (deadline.course.isNotEmpty) deadline.course,
-          formatDue(deadline.due),
-        ].join(' • ')),
+        subtitle: Text(
+          [
+            if (deadline.course.isNotEmpty) deadline.course,
+            formatDue(deadline.due),
+          ].join(' • '),
+        ),
         trailing: Text(
           deadline.remainingText,
           style: TextStyle(color: color, fontWeight: FontWeight.w700),
@@ -367,45 +400,47 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Widget _section(String title, String count) => Row(
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-          ),
-          Badge(label: Text(count)),
-        ],
-      );
+    children: [
+      Expanded(
+        child: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ),
+      Badge(label: Text(count)),
+    ],
+  );
 
   Widget _empty(IconData icon, String title, String subtitle) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Icon(icon, size: 42, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 10),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 4),
-              Text(subtitle, textAlign: TextAlign.center),
-            ],
-          ),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Icon(icon, size: 42, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(height: 10),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(subtitle, textAlign: TextAlign.center),
+        ],
+      ),
+    ),
+  );
 
   Widget _settingsCard(String title, Widget child) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 14),
-              child,
-            ],
-          ),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 14),
+          child,
+        ],
+      ),
+    ),
+  );
 
   String _offsetLabel(int hours) {
     if (hours % 24 == 0) {
@@ -418,7 +453,10 @@ class _HomeShellState extends State<HomeShell> {
   String _lastSyncText() {
     final value = widget.controller.lastSync;
     if (value == null) return t('Not synced yet', 'لم تتم المزامنة بعد');
-    return t('Last sync: ${DateFormat.jm().format(value)}', 'آخر مزامنة: ${DateFormat.jm().format(value)}');
+    return t(
+      'Last sync: ${DateFormat.jm().format(value)}',
+      'آخر مزامنة: ${DateFormat.jm().format(value)}',
+    );
   }
 
   Color _urgency(Deadline deadline) {
@@ -441,7 +479,12 @@ class _HomeShellState extends State<HomeShell> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(deadline.title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              Text(
+                deadline.title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
               const SizedBox(height: 10),
               if (deadline.course.isNotEmpty) Text(deadline.course),
               Text(formatDue(deadline.due)),
@@ -461,12 +504,16 @@ class _HomeShellState extends State<HomeShell> {
                     await widget.controller.toggleCompleted(deadline);
                     if (context.mounted) Navigator.pop(context);
                   },
-                  icon: Icon(widget.controller.completedIds.contains(deadline.stableKey)
-                      ? Icons.undo_rounded
-                      : Icons.check_rounded),
-                  label: Text(widget.controller.completedIds.contains(deadline.stableKey)
-                      ? t('Mark active', 'إرجاعه نشطًا')
-                      : t('Mark completed', 'تحديد كمكتمل')),
+                  icon: Icon(
+                    widget.controller.completedIds.contains(deadline.stableKey)
+                        ? Icons.undo_rounded
+                        : Icons.check_rounded,
+                  ),
+                  label: Text(
+                    widget.controller.completedIds.contains(deadline.stableKey)
+                        ? t('Mark active', 'إرجاعه نشطًا')
+                        : t('Mark completed', 'تحديد كمكتمل'),
+                  ),
                 ),
               ),
             ],
@@ -488,7 +535,12 @@ class _HomeShellState extends State<HomeShell> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(course, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              Text(
+                course,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
               const SizedBox(height: 10),
               ...deadlines.take(8).map(_deadlineCard),
             ],
@@ -503,13 +555,21 @@ class _HomeShellState extends State<HomeShell> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(t('Disconnect Moodle?', 'فصل Moodle؟')),
-        content: Text(t(
-          'This removes the private calendar URL and cached deadline data from this app.',
-          'سيؤدي هذا إلى حذف رابط التقويم الخاص والبيانات المخزنة من التطبيق.',
-        )),
+        content: Text(
+          t(
+            'This removes the private calendar URL and cached deadline data from this app.',
+            'سيؤدي هذا إلى حذف رابط التقويم الخاص والبيانات المخزنة من التطبيق.',
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(t('Cancel', 'إلغاء'))),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(t('Disconnect', 'فصل'))),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(t('Cancel', 'إلغاء')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(t('Disconnect', 'فصل')),
+          ),
         ],
       ),
     );
@@ -546,7 +606,8 @@ class _SetupState extends State<_Setup> {
         title: const Text('Moodle Reminder'),
         actions: [
           TextButton(
-            onPressed: () => widget.controller.setLocale(Locale(_ar ? 'en' : 'ar')),
+            onPressed: () =>
+                widget.controller.setLocale(Locale(_ar ? 'en' : 'ar')),
             child: Text(_ar ? 'EN' : 'العربية'),
           ),
         ],
@@ -554,12 +615,21 @@ class _SetupState extends State<_Setup> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Icon(Icons.notifications_active_rounded, size: 64, color: Theme.of(context).colorScheme.primary),
+          Icon(
+            Icons.notifications_active_rounded,
+            size: 64,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(height: 16),
           Text(
-            t('Never miss another Moodle deadline', 'لا تفوّت موعد Moodle بعد الآن'),
+            t(
+              'Never miss another Moodle deadline',
+              'لا تفوّت موعد Moodle بعد الآن',
+            ),
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 8),
           Text(
@@ -573,11 +643,16 @@ class _SetupState extends State<_Setup> {
           ...[
             t('Open Moodle Calendar', 'افتح تقويم Moodle'),
             t('Choose Export calendar', 'اختر تصدير التقويم'),
-            t('Copy the generated calendar URL', 'انسخ رابط التقويم الذي تم إنشاؤه'),
-          ].asMap().entries.map((entry) => ListTile(
-                leading: CircleAvatar(child: Text('${entry.key + 1}')),
-                title: Text(entry.value),
-              )),
+            t(
+              'Copy the generated calendar URL',
+              'انسخ رابط التقويم الذي تم إنشاؤه',
+            ),
+          ].asMap().entries.map(
+            (entry) => ListTile(
+              leading: CircleAvatar(child: Text('${entry.key + 1}')),
+              title: Text(entry.value),
+            ),
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _url,
@@ -601,7 +676,10 @@ class _SetupState extends State<_Setup> {
           ),
           if (widget.controller.error != null) ...[
             const SizedBox(height: 10),
-            Text(widget.controller.error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            Text(
+              widget.controller.error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ],
           const SizedBox(height: 14),
           FilledButton.icon(
@@ -612,7 +690,10 @@ class _SetupState extends State<_Setup> {
                     if (!ok && mounted) setState(() {});
                   },
             icon: widget.controller.busy
-                ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Icon(Icons.lock_open_rounded),
             label: Text(t('Connect securely', 'اتصال آمن')),
           ),
@@ -623,7 +704,12 @@ class _SetupState extends State<_Setup> {
 }
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.title, required this.next, required this.lastSync, required this.isArabic});
+  const _HeroCard({
+    required this.title,
+    required this.next,
+    required this.lastSync,
+    required this.isArabic,
+  });
   final String title;
   final Deadline? next;
   final DateTime? lastSync;
@@ -637,7 +723,9 @@ class _HeroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [scheme.primary, scheme.primaryContainer]),
+        gradient: LinearGradient(
+          colors: [scheme.primary, scheme.primaryContainer],
+        ),
         borderRadius: BorderRadius.circular(24),
       ),
       child: DefaultTextStyle.merge(
@@ -645,21 +733,47 @@ class _HeroCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(color: scheme.onPrimary, fontSize: 20, fontWeight: FontWeight.w900)),
+            Text(
+              title,
+              style: TextStyle(
+                color: scheme.onPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
             const SizedBox(height: 14),
             if (next == null)
               Text(t('Nothing urgent right now.', 'لا يوجد شيء عاجل الآن.'))
             else ...[
-              Text(t('NEXT DEADLINE', 'الموعد التالي'), style: TextStyle(color: scheme.onPrimary.withOpacity(.8), fontWeight: FontWeight.w700, fontSize: 12)),
+              Text(
+                t('NEXT DEADLINE', 'الموعد التالي'),
+                style: TextStyle(
+                  color: scheme.onPrimary.withOpacity(.8),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(next!.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: scheme.onPrimary, fontWeight: FontWeight.w900, fontSize: 18)),
+              Text(
+                next!.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: scheme.onPrimary,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                ),
+              ),
               const SizedBox(height: 4),
               Text('${next!.remainingText} • ${formatDue(next!.due)}'),
             ],
             if (lastSync != null) ...[
               const SizedBox(height: 12),
               Text(
-                t('Last synced ${DateFormat.jm().format(lastSync!)}', 'آخر مزامنة ${DateFormat.jm().format(lastSync!)}'),
+                t(
+                  'Last synced ${DateFormat.jm().format(lastSync!)}',
+                  'آخر مزامنة ${DateFormat.jm().format(lastSync!)}',
+                ),
                 style: TextStyle(color: scheme.onPrimary.withOpacity(.8)),
               ),
             ],

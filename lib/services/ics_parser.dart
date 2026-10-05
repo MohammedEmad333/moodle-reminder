@@ -59,10 +59,8 @@ class IcsParser {
     Map<String, String> keyParts,
   ) {
     final title = _clean(values['SUMMARY'] ?? '');
-    final due = _parseDate(
-          values['DTSTART'],
-          keyParts['DTSTART'],
-        ) ??
+    final due =
+        _parseDate(values['DTSTART'], keyParts['DTSTART']) ??
         _parseDate(values['DTEND'], keyParts['DTEND']);
 
     if (title.isEmpty || due == null) return null;
@@ -136,8 +134,10 @@ class IcsParser {
         return DateTime.utc(year, month, day, hour, minute, second).toLocal();
       }
 
-      final tzidMatch = RegExp(r'TZID=(?:"([^"]+)"|([^;:]+))', caseSensitive: false)
-          .firstMatch(params);
+      final tzidMatch = RegExp(
+        r'TZID=(?:"([^"]+)"|([^;:]+))',
+        caseSensitive: false,
+      ).firstMatch(params);
       final tzid = tzidMatch?.group(1) ?? tzidMatch?.group(2);
       if (tzid != null && tzid.isNotEmpty) {
         try {
