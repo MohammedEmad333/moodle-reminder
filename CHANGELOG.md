@@ -12,3 +12,4 @@
 - Added Arabic/English UI switching and system/light/dark themes.
 - Added onboarding for connecting a Moodle iCalendar feed.
 - Added parser unit tests.
+- Added GitHub Actions verification for formatting, analysis, tests, and release APK builds.
