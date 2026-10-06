@@ -57,6 +57,8 @@ The Moodle calendar export URL contains a private access token, so Moodle Remind
 - Disconnecting Moodle removes the secure URL, cached deadlines, sync timestamp, and local completion state from the app.
 - `USE_EXACT_ALARM` is intentionally not requested. The app uses `SCHEDULE_EXACT_ALARM` with user approval where Android requires it and falls back to inexact scheduling when necessary.
 
+See [SECURITY.md](SECURITY.md) for vulnerability reporting and the supported security model.
+
 ## Getting started
 
 ### 1. Export your Moodle calendar
@@ -159,7 +161,7 @@ flutter run
 
 ## Testing and CI
 
-The project uses GitHub Actions for continuous verification. Pull requests and pushes to `main` run formatting checks, static analysis, unit tests, and a release APK build.
+The project uses GitHub Actions for continuous verification. Application, dependency, Android, and CI changes run formatting checks, static analysis, unit tests, and a release APK build. Documentation-only pull requests and pushes are skipped to avoid unnecessary Android builds.
 
 `test/ics_parser_test.dart` covers important calendar parsing behavior including:
 
@@ -192,6 +194,12 @@ Moodle Reminder focuses on a small, reliable product surface rather than trying 
 - protect the private calendar token;
 - support Arabic and English cleanly;
 - keep the calendar parser and reminder pipeline testable.
+
+## Contributing
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, required checks, pull request expectations, and release guidance.
+
+Use the repository's structured issue forms for public bugs and feature requests. Security-sensitive findings should follow [SECURITY.md](SECURITY.md) and must not expose private Moodle calendar tokens publicly.
 
 ## Author
 
