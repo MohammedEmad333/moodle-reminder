@@ -1,0 +1,79 @@
+name: Bug report
+description: Report a reproducible problem in Moodle Reminder
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Never paste a private Moodle calendar URL, token, password, signing key, or other secret here.
+
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Example: 2.0.0
+      placeholder: 2.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: android
+    attributes:
+      label: Android version / device
+      placeholder: Android 15 / Pixel 8
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Onboarding / Moodle connection
+        - Home dashboard
+        - Calendar / courses
+        - Background sync
+        - Notifications / reminders
+        - ICS parsing
+        - Language / RTL
+        - Theme / UI
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Remove private calendar URLs, tokens, or personal Moodle data before posting.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for duplicates.
+          required: true
+        - label: I removed private Moodle calendar URLs, tokens, credentials, and other secrets.
+          required: true
+        - label: This is not a security vulnerability requiring private disclosure.
+          required: true

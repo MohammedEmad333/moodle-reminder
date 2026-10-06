@@ -1,0 +1,58 @@
+name: Feature request
+description: Suggest an improvement that fits Moodle Reminder's focused scope
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Moodle Reminder aims to stay focused on deadline visibility, calendar sync, offline usefulness, and reliable reminders.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem or workflow gap should this solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the desired behavior and how it would fit the current app.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional alternatives or workarounds you considered.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Deadline tracking
+        - Calendar / courses
+        - Notifications / reminders
+        - Background sync
+        - ICS / Moodle integration
+        - Offline behavior
+        - Arabic / English / RTL
+        - UI / accessibility
+        - Developer tooling / testing
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for similar requests.
+          required: true
+        - label: The request does not require storing Moodle passwords or exposing private calendar tokens.
+          required: true
