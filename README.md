@@ -1,35 +1,78 @@
+<div align="center">
+
 # Moodle Reminder
 
-Moodle Reminder is a privacy-friendly Flutter companion for Moodle deadlines. It reads Moodle's official private iCalendar (`.ics`) feed, keeps an offline deadline cache, refreshes it in the background, and schedules local reminders without asking for or storing a Moodle password.
+**A privacy-friendly Flutter companion for Moodle deadlines, background calendar sync, and reliable local reminders.**
+
+[![Flutter CI](https://github.com/MohammedEmad333/moodle-reminder/actions/workflows/flutter-ci.yml/badge.svg)](https://github.com/MohammedEmad333/moodle-reminder/actions/workflows/flutter-ci.yml)
+[![Release](https://github.com/MohammedEmad333/moodle-reminder/actions/workflows/release.yml/badge.svg)](https://github.com/MohammedEmad333/moodle-reminder/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/MohammedEmad333/moodle-reminder?display_name=tag)](https://github.com/MohammedEmad333/moodle-reminder/releases/latest)
+[![Platform](https://img.shields.io/badge/platform-Android-3DDC84)](https://github.com/MohammedEmad333/moodle-reminder/releases/latest)
+[![Flutter](https://img.shields.io/badge/Flutter-3.47.6-02569B?logo=flutter)](https://flutter.dev/)
+
+[**Download latest APK**](https://github.com/MohammedEmad333/moodle-reminder/releases/latest) · [**View releases**](https://github.com/MohammedEmad333/moodle-reminder/releases) · [**Changelog**](CHANGELOG.md)
+
+</div>
+
+---
+
+## Overview
+
+Moodle Reminder turns Moodle's official private iCalendar (`.ics`) export into a focused deadline companion. It keeps an offline cache, refreshes deadlines in the background, schedules local reminders, and never asks for or stores a Moodle password.
+
+The project is designed around privacy, offline usefulness, predictable reminder behavior, and a clean separation between UI, state, parsing, storage, background work, and notifications.
+
+## Latest release
+
+**Moodle Reminder v2.0.0** is the current stable release.
+
+- Android APK: [`moodle-reminder-v2.0.0.apk`](https://github.com/MohammedEmad333/moodle-reminder/releases/download/v2.0.0/moodle-reminder-v2.0.0.apk)
+- SHA-256 checksum: [`moodle-reminder-v2.0.0.apk.sha256`](https://github.com/MohammedEmad333/moodle-reminder/releases/download/v2.0.0/moodle-reminder-v2.0.0.apk.sha256)
+- Release notes: [v2.0.0](https://github.com/MohammedEmad333/moodle-reminder/releases/tag/v2.0.0)
+
+> For normal installs, use the APK attached to the latest GitHub Release rather than a temporary Actions artifact.
 
 ## Highlights
 
-- Secure Moodle calendar URL storage using the platform secure store.
-- Automatic background sync every six hours when a network connection is available.
-- Multiple reminder rules (3 days, 2 days, 1 day, 6 hours, 1 hour) plus a due-now notification.
-- Stable reminder IDs based on Moodle event UIDs.
-- Home dashboard with urgency, countdowns and last-sync status.
-- Calendar agenda and course grouping.
-- Mark deadlines completed locally to silence their reminders.
-- English and Arabic UI with RTL support.
-- System, light and dark themes.
-- Offline cache and pull-to-refresh/manual sync.
-- ICS support for `UID`, `DTSTART`, `DTEND`, `TZID`, `URL`, `LOCATION`, `STATUS`, `SEQUENCE`, `LAST-MODIFIED`, folded lines and escaped text.
-- Unit tests for the ICS parser.
+| Area | What Moodle Reminder provides |
+| --- | --- |
+| Deadline tracking | Home dashboard, urgency states, countdowns, calendar agenda, and course grouping |
+| Reminders | Multiple offsets: 3 days, 2 days, 1 day, 6 hours, 1 hour, plus due-now |
+| Background sync | Android WorkManager refresh approximately every six hours when constraints allow |
+| Offline support | Cached deadlines and last-sync state remain available without a connection |
+| Completion state | Mark deadlines completed locally to suppress further reminders |
+| Languages | English and Arabic with RTL support |
+| Appearance | System, light, and dark themes |
+| Moodle integration | Uses Moodle's exported private iCalendar URL; no Moodle password is requested |
+| ICS parsing | `UID`, `DTSTART`, `DTEND`, `TZID`, `URL`, `LOCATION`, `STATUS`, `SEQUENCE`, `LAST-MODIFIED`, folded lines, escaped text, and date-only events |
+| Reliability | Stable notification IDs derived from Moodle event UIDs and exact-alarm fallback behavior |
 
 ## Privacy and security
 
-The app never asks for a Moodle username or password. Moodle's exported calendar URL contains a private access token, so it is treated like a secret and stored with `flutter_secure_storage` instead of plain preferences.
+The Moodle calendar export URL contains a private access token, so Moodle Reminder treats it as a secret.
 
-Deadline metadata is cached locally so the app remains useful offline. Disconnecting Moodle removes the secure URL, cached deadlines, sync timestamp and local completion state from the app.
+- The private calendar URL is stored with `flutter_secure_storage`, not plain preferences.
+- The app never asks for a Moodle username or password.
+- Deadline metadata is cached locally for offline use.
+- Disconnecting Moodle removes the secure URL, cached deadlines, sync timestamp, and local completion state from the app.
+- `USE_EXACT_ALARM` is intentionally not requested. The app uses `SCHEDULE_EXACT_ALARM` with user approval where Android requires it and falls back to inexact scheduling when necessary.
 
-## Getting the Moodle calendar URL
+## Getting started
+
+### 1. Export your Moodle calendar
 
 1. Open Moodle.
 2. Open **Calendar**.
 3. Choose **Export calendar**.
-4. Generate and copy the calendar URL.
-5. Paste it into Moodle Reminder and choose **Connect securely**.
+4. Generate and copy the private calendar URL.
+5. Open Moodle Reminder.
+6. Paste the URL and choose **Connect securely**.
+
+### 2. Install the app
+
+Download the latest Android APK from the [Releases page](https://github.com/MohammedEmad333/moodle-reminder/releases/latest).
+
+If you want to verify the downloaded file, compare its SHA-256 digest with the `.sha256` file attached to the same release.
 
 ## Architecture
 
@@ -48,46 +91,107 @@ lib/
     └── notification_service.dart
 ```
 
-The repository owns network/cache/secure-storage access, the controller owns app state, services isolate parsing/background/notification concerns, and the UI only consumes controller state.
+### Responsibilities
+
+- **`CalendarRepository`** owns network access, secure calendar URL storage, cached deadlines, and sync metadata.
+- **`AppController`** owns application state and coordinates user-facing actions.
+- **ICS parser** converts Moodle iCalendar data into normalized deadline models.
+- **Background sync service** refreshes the feed under Android WorkManager constraints.
+- **Notification service** schedules and updates local reminders using stable IDs.
+- **UI layer** consumes controller state and does not directly own persistence or network logic.
 
 Compatibility export files remain at `lib/ics_parser.dart` and `lib/notification_service.dart` for code importing the original paths.
 
-## Development
+## Reminder model
 
-Current dependencies target modern Flutter. Use Flutter 3.38.1 or newer and Dart 3.10 or newer.
+For each upcoming deadline, Moodle Reminder can schedule reminders at:
 
-```bash
-flutter pub get
-dart format lib test
-flutter analyze
-flutter test
-flutter run
-```
+- 3 days before
+- 2 days before
+- 1 day before
+- 6 hours before
+- 1 hour before
+- due time
 
-To build Android:
+Completed or expired deadlines are excluded from future reminder scheduling. Stable IDs derived from Moodle event UIDs reduce duplicate-notification problems across refreshes.
 
-```bash
-flutter build apk --release
-```
+## Background behavior
+
+Android WorkManager refreshes the calendar approximately every six hours, subject to operating-system scheduling, connectivity, and battery constraints. It is intentionally not treated as an exact six-hour timer.
+
+After a successful refresh, the app updates its offline cache and rebuilds the local reminder schedule from the latest Moodle data.
 
 ## Android permissions
 
 Moodle Reminder uses:
 
-- `INTERNET` to download the calendar feed.
-- `POST_NOTIFICATIONS` for Android notification permission.
-- `SCHEDULE_EXACT_ALARM` for precise deadline alarms; the app requests user approval where Android requires it and falls back to inexact alarms if approval is denied.
-- `RECEIVE_BOOT_COMPLETED` so scheduled reminders can be restored after reboot.
+- `INTERNET` — download the Moodle calendar feed.
+- `POST_NOTIFICATIONS` — request notification permission on supported Android versions.
+- `SCHEDULE_EXACT_ALARM` — request precise alarm access where applicable.
+- `RECEIVE_BOOT_COMPLETED` — allow reminder scheduling to recover after device reboot.
 
-The app intentionally does not request `USE_EXACT_ALARM`; this avoids declaring the more restricted app-store permission when `SCHEDULE_EXACT_ALARM` plus user approval is sufficient.
+## Development
 
-## Background behavior
+### Requirements
 
-Android WorkManager refreshes the feed approximately every six hours subject to operating-system scheduling, network availability and battery constraints. It is not an exact six-hour timer. After a successful refresh, the cached deadlines and notification schedule are updated.
+- Flutter 3.38.1 or newer
+- Dart 3.10 or newer
+- Java 17 for Android builds
 
-## Testing
+The CI and release workflows currently pin Flutter **3.47.6**.
 
-`test/ics_parser_test.dart` covers UTC parsing, folded iCalendar lines, date-only events, metadata and malformed-event handling. Run `flutter analyze` and `flutter test` before release builds.
+### Local verification
+
+```bash
+flutter pub get
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test
+flutter build apk --release
+```
+
+### Run locally
+
+```bash
+flutter pub get
+flutter run
+```
+
+## Testing and CI
+
+The project uses GitHub Actions for continuous verification. Pull requests and pushes to `main` run formatting checks, static analysis, unit tests, and a release APK build.
+
+`test/ics_parser_test.dart` covers important calendar parsing behavior including:
+
+- UTC timestamps
+- folded iCalendar lines
+- date-only events
+- event metadata
+- malformed event handling
+
+The release workflow independently verifies the source before publishing a versioned APK and SHA-256 checksum to GitHub Releases.
+
+## Release process
+
+Release publishing is automated.
+
+1. Update `version` in `pubspec.yaml`.
+2. Add the matching version section to `CHANGELOG.md`.
+3. Merge the release metadata to `main`.
+4. The release workflow verifies the source, builds the APK, generates its checksum, and publishes the GitHub Release.
+
+For the current app version `2.0.0+2`, the public tag is `v2.0.0`.
+
+## Project goals
+
+Moodle Reminder focuses on a small, reliable product surface rather than trying to replace Moodle itself:
+
+- make upcoming work visible at a glance;
+- keep useful deadline data available offline;
+- deliver reminders even when the Moodle web UI is not open;
+- protect the private calendar token;
+- support Arabic and English cleanly;
+- keep the calendar parser and reminder pipeline testable.
 
 ## Author
 
