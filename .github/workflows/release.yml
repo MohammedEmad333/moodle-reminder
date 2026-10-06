@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pubspec.yaml'
+      - 'CHANGELOG.md'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(awk '/^version:/ {print $2}' pubspec.yaml)
+          RELEASE_VERSION="${VERSION%%+*}"
+          TAG="v${RELEASE_VERSION}"
+          echo "version=${RELEASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify changelog entry
+        shell: bash
+        run: |
+          grep -q "^## ${{ steps.version.outputs.version }}$" CHANGELOG.md
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify source
+        run: |
+          dart format --output=none --set-exit-if-changed lib test
+          flutter analyze
+          flutter test
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            "release-assets/moodle-reminder-${{ steps.version.outputs.tag }}.apk"
+          sha256sum "release-assets/moodle-reminder-${{ steps.version.outputs.tag }}.apk" \
+            > "release-assets/moodle-reminder-${{ steps.version.outputs.tag }}.apk.sha256"
+
+      - name: Prepare release notes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          version = '${{ steps.version.outputs.version }}'
+          text = Path('CHANGELOG.md').read_text()
+          match = re.search(rf'^## {re.escape(version)}\s*$\n(.*?)(?=^##\s|\Z)', text, re.M | re.S)
+          if not match:
+              raise SystemExit(f'CHANGELOG section for {version} not found')
+          notes = match.group(1).strip()
+          Path('release-notes.md').write_text(notes + '\n')
+          PY
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; refreshing assets."
+            gh release upload "$TAG" release-assets/* --clobber
+          else
+            gh release create "$TAG" \
+              release-assets/* \
+              --target "$GITHUB_SHA" \
+              --title "Moodle Reminder $TAG" \
+              --notes-file release-notes.md
+          fi
