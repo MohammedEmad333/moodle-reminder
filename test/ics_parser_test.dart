@@ -35,6 +35,35 @@ END:VCALENDAR''';
       expect(deadline.lastModified?.toUtc(), DateTime.utc(2030, 1, 10, 12));
     });
 
+    test('normalizes Moodle numeric course suffixes', () {
+      const raw = '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:33592@moodle.alaqsa.edu.ps\nSUMMARY:واجب المحاضرة 1 و 2 مستحق\nDTSTART:20301020T200000Z\nCATEGORIES:تصميم منطق الحـاسوب_176\nEND:VEVENT\nEND:VCALENDAR''';
+
+      final result = IcsParser.parse(raw);
+
+      expect(result.single.course, 'تصميم منطق الحـاسوب');
+    });
+
+    test('deduplicates the same Moodle UID and keeps the newest sequence', () {
+      const raw = '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:assignment-42@example.edu\nSUMMARY:Old title\nDTSTART:20300115T200000Z\nSEQUENCE:1\nLAST-MODIFIED:20300101T100000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:assignment-42@example.edu\nSUMMARY:Updated title\nDTSTART:20300116T210000Z\nSEQUENCE:2\nLAST-MODIFIED:20300102T100000Z\nEND:VEVENT\nEND:VCALENDAR''';
+
+      final result = IcsParser.parse(raw);
+
+      expect(result, hasLength(1));
+      expect(result.single.title, 'Updated title');
+      expect(result.single.sequence, 2);
+      expect(result.single.due.toUtc(), DateTime.utc(2030, 1, 16, 21));
+    });
+
+    test('uses LAST-MODIFIED when duplicate UID sequences are equal', () {
+      const raw = '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:assignment-99@example.edu\nSUMMARY:Earlier revision\nDTSTART:20300201T120000Z\nSEQUENCE:0\nLAST-MODIFIED:20300101T080000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:assignment-99@example.edu\nSUMMARY:Later revision\nDTSTART:20300202T120000Z\nSEQUENCE:0\nLAST-MODIFIED:20300103T080000Z\nEND:VEVENT\nEND:VCALENDAR''';
+
+      final result = IcsParser.parse(raw);
+
+      expect(result, hasLength(1));
+      expect(result.single.title, 'Later revision');
+      expect(result.single.lastModified?.toUtc(), DateTime.utc(2030, 1, 3, 8));
+    });
+
     test('unfolds continuation lines', () {
       const raw =
           '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:x\nSUMMARY:A very long assignment\n title\nDTSTART:20310101T120000Z\nEND:VEVENT\nEND:VCALENDAR''';
