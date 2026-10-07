@@ -1,10 +1,11 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../app_controller.dart';
 import '../models/deadline.dart';
-import '../services/ics_parser.dart';
 import '../services/notification_service.dart';
 
 class HomeShell extends StatefulWidget {
@@ -22,6 +23,7 @@ class _HomeShellState extends State<HomeShell> {
 
   bool get _ar => widget.controller.locale.languageCode == 'ar';
   String t(String en, String ar) => _ar ? ar : en;
+  String get _localeName => _ar ? 'ar' : 'en';
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +40,7 @@ class _HomeShellState extends State<HomeShell> {
       t('Settings', 'الإعدادات'),
     ];
 
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: Text(titles[_index]),
@@ -60,6 +63,7 @@ class _HomeShellState extends State<HomeShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
+        indicatorColor: scheme.primary.withValues(alpha: .22),
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: [
           NavigationDestination(
@@ -119,7 +123,14 @@ class _HomeShellState extends State<HomeShell> {
               '$weekCount مواعيد هذا الأسبوع',
             ),
             next: next,
-            lastSync: controller.lastSync,
+            nextDueText: next == null ? null : _formatDue(next.due),
+            nextRemainingText: next == null ? null : _remainingText(next),
+            lastSyncText: controller.lastSync == null
+                ? null
+                : t(
+                    'Last synced ${DateFormat.jm('en').format(controller.lastSync!)}',
+                    'آخر مزامنة ${DateFormat.jm('ar').format(controller.lastSync!)}',
+                  ),
             isArabic: _ar,
           ),
           if (controller.error != null) ...[
@@ -164,11 +175,26 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Widget _calendar() {
-    final items = widget.controller.activeDeadlines.where((deadline) {
+    final active = widget.controller.activeDeadlines;
+    final items = active.where((deadline) {
       final d = deadline.due;
       return d.year == _selectedDate.year &&
           d.month == _selectedDate.month &&
           d.day == _selectedDate.day;
+    }).toList();
+
+    final futureAfterSelected = active.where((deadline) {
+      final selectedDay = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+      );
+      final dueDay = DateTime(
+        deadline.due.year,
+        deadline.due.month,
+        deadline.due.day,
+      );
+      return dueDay.isAfter(selectedDay);
     }).toList();
 
     return ListView(
@@ -176,18 +202,19 @@ class _HomeShellState extends State<HomeShell> {
       children: [
         Card(
           clipBehavior: Clip.antiAlias,
-          child: CalendarDatePicker(
-            initialDate: _selectedDate,
-            firstDate: DateTime.now().subtract(const Duration(days: 365)),
-            lastDate: DateTime.now().add(const Duration(days: 730)),
-            onDateChanged: (value) => setState(() => _selectedDate = value),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+            child: _DeadlineCalendar(
+              selectedDate: _selectedDate,
+              deadlines: active,
+              localeName: _localeName,
+              onDateChanged: (value) => setState(() => _selectedDate = value),
+            ),
           ),
         ),
         const SizedBox(height: 16),
         _section(
-          DateFormat.yMMMMd(
-            widget.controller.locale.languageCode,
-          ).format(_selectedDate),
+          DateFormat.yMMMMd(_localeName).format(_selectedDate),
           '${items.length}',
         ),
         const SizedBox(height: 8),
@@ -195,10 +222,15 @@ class _HomeShellState extends State<HomeShell> {
           _empty(
             Icons.event_available_outlined,
             t('Nothing due on this day', 'لا يوجد تسليم في هذا اليوم'),
-            t(
-              'Choose another date to inspect your agenda.',
-              'اختر تاريخًا آخر لعرض المواعيد.',
-            ),
+            futureAfterSelected.isEmpty
+                ? t(
+                    'Choose another date to inspect your agenda.',
+                    'اختر تاريخًا آخر لعرض المواعيد.',
+                  )
+                : t(
+                    'Next deadline: ${DateFormat.MMMd('en').format(futureAfterSelected.first.due)}',
+                    'الموعد القادم: ${DateFormat.MMMMd('ar').format(futureAfterSelected.first.due)}',
+                  ),
           )
         else
           ...items.map(_deadlineCard),
@@ -244,16 +276,20 @@ class _HomeShellState extends State<HomeShell> {
                   ),
                 ),
                 title: Text(
-                  entry.key,
+                  _displayCourse(entry.key),
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 subtitle: Text(
                   t(
-                    '${entry.value.length} upcoming • next ${next.remainingText}',
-                    '${entry.value.length} قادمة • التالي ${next.remainingText}',
+                    '${entry.value.length} upcoming • next ${_remainingText(next)}',
+                    '${entry.value.length} قادمة • التالي ${_remainingText(next)}',
                   ),
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: Icon(
+                  _ar
+                      ? Icons.chevron_left_rounded
+                      : Icons.chevron_right_rounded,
+                ),
                 onTap: () => _showCourse(entry.key, entry.value),
               ),
             );
@@ -369,8 +405,10 @@ class _HomeShellState extends State<HomeShell> {
       deadline.stableKey,
     );
     final color = _urgency(deadline);
+    final course = _displayCourse(deadline.course);
     return Card(
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: Icon(
           completed ? Icons.check_circle_rounded : Icons.schedule_rounded,
           color: completed ? Colors.green : color,
@@ -384,15 +422,22 @@ class _HomeShellState extends State<HomeShell> {
             decoration: completed ? TextDecoration.lineThrough : null,
           ),
         ),
-        subtitle: Text(
-          [
-            if (deadline.course.isNotEmpty) deadline.course,
-            formatDue(deadline.due),
-          ].join(' • '),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (course.isNotEmpty)
+                Text(course, maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 2),
+              Text(_formatDue(deadline.due)),
+            ],
+          ),
         ),
         trailing: Text(
-          deadline.remainingText,
-          style: TextStyle(color: color, fontWeight: FontWeight.w700),
+          _remainingText(deadline),
+          textAlign: TextAlign.center,
+          style: TextStyle(color: color, fontWeight: FontWeight.w800),
         ),
         onTap: () => _showDeadline(deadline),
       ),
@@ -454,10 +499,45 @@ class _HomeShellState extends State<HomeShell> {
     final value = widget.controller.lastSync;
     if (value == null) return t('Not synced yet', 'لم تتم المزامنة بعد');
     return t(
-      'Last sync: ${DateFormat.jm().format(value)}',
-      'آخر مزامنة: ${DateFormat.jm().format(value)}',
+      'Last sync: ${DateFormat.jm('en').format(value)}',
+      'آخر مزامنة: ${DateFormat.jm('ar').format(value)}',
     );
   }
+
+  String _formatDue(DateTime value) {
+    if (_ar) {
+      return DateFormat('EEEE، d MMMM • h:mm a', 'ar').format(value);
+    }
+    return DateFormat('EEE, MMM d • h:mm a', 'en').format(value);
+  }
+
+  String _remainingText(Deadline deadline) {
+    final difference = deadline.due.difference(DateTime.now());
+    if (difference.isNegative) return t('Past', 'منتهي');
+
+    final minutes = difference.inMinutes;
+    final days = minutes ~/ 1440;
+    final hours = (minutes % 1440) ~/ 60;
+    final mins = minutes % 60;
+
+    if (_ar) {
+      if (days > 0) {
+        return hours > 0 ? 'متبقي $days يوم و$hours ساعة' : 'متبقي $days يوم';
+      }
+      if (hours > 0) {
+        return mins > 0
+            ? 'متبقي $hours ساعة و$mins دقيقة'
+            : 'متبقي $hours ساعة';
+      }
+      return 'متبقي $mins دقيقة';
+    }
+
+    if (days > 0) return '${days}d${hours > 0 ? ' ${hours}h' : ''} left';
+    if (hours > 0) return '${hours}h${mins > 0 ? ' ${mins}m' : ''} left';
+    return '${mins}m left';
+  }
+
+  String _displayCourse(String value) => value.replaceAll('_', ' — ').trim();
 
   Color _urgency(Deadline deadline) {
     final hours = deadline.hoursRemaining;
@@ -486,15 +566,19 @@ class _HomeShellState extends State<HomeShell> {
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 10),
-              if (deadline.course.isNotEmpty) Text(deadline.course),
-              Text(formatDue(deadline.due)),
+              if (deadline.course.isNotEmpty)
+                Text(_displayCourse(deadline.course)),
+              Text(_formatDue(deadline.due)),
               if (deadline.description.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(deadline.description),
               ],
               if (deadline.url.isNotEmpty) ...[
                 const SizedBox(height: 10),
-                SelectableText(deadline.url),
+                Directionality(
+                  textDirection: ui.TextDirection.ltr,
+                  child: SelectableText(deadline.url),
+                ),
               ],
               const SizedBox(height: 18),
               SizedBox(
@@ -536,7 +620,7 @@ class _HomeShellState extends State<HomeShell> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                course,
+                _displayCourse(course),
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
@@ -707,36 +791,40 @@ class _HeroCard extends StatelessWidget {
   const _HeroCard({
     required this.title,
     required this.next,
-    required this.lastSync,
+    required this.nextDueText,
+    required this.nextRemainingText,
+    required this.lastSyncText,
     required this.isArabic,
   });
+
   final String title;
   final Deadline? next;
-  final DateTime? lastSync;
+  final String? nextDueText;
+  final String? nextRemainingText;
+  final String? lastSyncText;
   final bool isArabic;
 
   String t(String en, String ar) => isArabic ? ar : en;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    const start = Color(0xFFF98012);
+    const end = Color(0xFF8A430D);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [scheme.primary, scheme.primaryContainer],
-        ),
+        gradient: const LinearGradient(colors: [start, end]),
         borderRadius: BorderRadius.circular(24),
       ),
       child: DefaultTextStyle.merge(
-        style: TextStyle(color: scheme.onPrimary),
+        style: const TextStyle(color: Colors.white),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
-              style: TextStyle(
-                color: scheme.onPrimary,
+              style: const TextStyle(
+                color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
               ),
@@ -748,7 +836,7 @@ class _HeroCard extends StatelessWidget {
               Text(
                 t('NEXT DEADLINE', 'الموعد التالي'),
                 style: TextStyle(
-                  color: scheme.onPrimary.withValues(alpha: .8),
+                  color: Colors.white.withValues(alpha: .82),
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -758,23 +846,35 @@ class _HeroCard extends StatelessWidget {
                 next!.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: scheme.onPrimary,
+                style: const TextStyle(
+                  color: Colors.white,
                   fontWeight: FontWeight.w900,
                   fontSize: 18,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text('${next!.remainingText} • ${formatDue(next!.due)}'),
+              if (nextRemainingText != null) ...[
+                const SizedBox(height: 7),
+                Text(
+                  nextRemainingText!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+              if (nextDueText != null) ...[
+                const SizedBox(height: 3),
+                Text(
+                  nextDueText!,
+                  style: TextStyle(color: Colors.white.withValues(alpha: .9)),
+                ),
+              ],
             ],
-            if (lastSync != null) ...[
+            if (lastSyncText != null) ...[
               const SizedBox(height: 12),
               Text(
-                t(
-                  'Last synced ${DateFormat.jm().format(lastSync!)}',
-                  'آخر مزامنة ${DateFormat.jm().format(lastSync!)}',
-                ),
-                style: TextStyle(color: scheme.onPrimary.withValues(alpha: .8)),
+                lastSyncText!,
+                style: TextStyle(color: Colors.white.withValues(alpha: .78)),
               ),
             ],
           ],
@@ -782,4 +882,191 @@ class _HeroCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DeadlineCalendar extends StatelessWidget {
+  const _DeadlineCalendar({
+    required this.selectedDate,
+    required this.deadlines,
+    required this.localeName,
+    required this.onDateChanged,
+  });
+
+  final DateTime selectedDate;
+  final List<Deadline> deadlines;
+  final String localeName;
+  final ValueChanged<DateTime> onDateChanged;
+
+  bool get isArabic => localeName == 'ar';
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final monthStart = DateTime(selectedDate.year, selectedDate.month, 1);
+    final daysInMonth = DateTime(
+      selectedDate.year,
+      selectedDate.month + 1,
+      0,
+    ).day;
+    final offset = isArabic
+        ? (monthStart.weekday + 1) % 7
+        : monthStart.weekday % 7;
+    final cellCount = ((offset + daysInMonth + 6) ~/ 7) * 7;
+    final weekdays = isArabic
+        ? const ['سبت', 'أحد', 'اثن', 'ثلا', 'أرب', 'خمي', 'جمع']
+        : const ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            IconButton(
+              tooltip: isArabic ? 'الشهر السابق' : 'Previous month',
+              onPressed: () => _moveMonth(-1),
+              icon: Icon(
+                isArabic
+                    ? Icons.chevron_right_rounded
+                    : Icons.chevron_left_rounded,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                DateFormat.yMMMM(localeName).format(selectedDate),
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ),
+            IconButton(
+              tooltip: isArabic ? 'الشهر التالي' : 'Next month',
+              onPressed: () => _moveMonth(1),
+              icon: Icon(
+                isArabic
+                    ? Icons.chevron_left_rounded
+                    : Icons.chevron_right_rounded,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: weekdays
+              .map(
+                (label) => Expanded(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 6),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 7,
+            childAspectRatio: 0.82,
+          ),
+          itemCount: cellCount,
+          itemBuilder: (context, index) {
+            final day = index - offset + 1;
+            if (day < 1 || day > daysInMonth) return const SizedBox.shrink();
+
+            final date = DateTime(selectedDate.year, selectedDate.month, day);
+            final selected = _sameDay(date, selectedDate);
+            final today = _sameDay(date, DateTime.now());
+            final eventCount = deadlines
+                .where((deadline) => _sameDay(deadline.due, date))
+                .length;
+            final markerCount = eventCount > 3 ? 3 : eventCount;
+
+            return Semantics(
+              button: true,
+              selected: selected,
+              label: eventCount == 0
+                  ? DateFormat.yMMMMd(localeName).format(date)
+                  : '${DateFormat.yMMMMd(localeName).format(date)}, $eventCount ${isArabic ? 'أحداث' : 'events'}',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: () => onDateChanged(date),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 160),
+                        width: 36,
+                        height: 36,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: selected ? scheme.primary : Colors.transparent,
+                          border: today && !selected
+                              ? Border.all(color: scheme.primary, width: 1.4)
+                              : null,
+                        ),
+                        child: Text(
+                          '$day',
+                          style: TextStyle(
+                            color: selected
+                                ? scheme.onPrimary
+                                : scheme.onSurface,
+                            fontWeight: selected || today
+                                ? FontWeight.w800
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 8,
+                        child: markerCount == 0
+                            ? null
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(
+                                  markerCount,
+                                  (_) => Container(
+                                    width: 5,
+                                    height: 5,
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 1,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: selected
+                                          ? scheme.primary
+                                          : const Color(0xFFF98012),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void _moveMonth(int delta) {
+    final target = DateTime(selectedDate.year, selectedDate.month + delta, 1);
+    final lastDay = DateTime(target.year, target.month + 1, 0).day;
+    final day = selectedDate.day > lastDay ? lastDay : selectedDate.day;
+    onDateChanged(DateTime(target.year, target.month, day));
+  }
+
+  bool _sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 }

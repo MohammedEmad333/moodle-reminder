@@ -36,7 +36,8 @@ END:VCALENDAR''';
     });
 
     test('normalizes Moodle numeric course suffixes', () {
-      const raw = '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:33592@moodle.alaqsa.edu.ps\nSUMMARY:واجب المحاضرة 1 و 2 مستحق\nDTSTART:20301020T200000Z\nCATEGORIES:تصميم منطق الحـاسوب_176\nEND:VEVENT\nEND:VCALENDAR''';
+      const raw =
+          '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:33592@moodle.alaqsa.edu.ps\nSUMMARY:واجب المحاضرة 1 و 2 مستحق\nDTSTART:20301020T200000Z\nCATEGORIES:تصميم منطق الحـاسوب_176\nEND:VEVENT\nEND:VCALENDAR''';
 
       final result = IcsParser.parse(raw);
 
@@ -44,7 +45,8 @@ END:VCALENDAR''';
     });
 
     test('deduplicates the same Moodle UID and keeps the newest sequence', () {
-      const raw = '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:assignment-42@example.edu\nSUMMARY:Old title\nDTSTART:20300115T200000Z\nSEQUENCE:1\nLAST-MODIFIED:20300101T100000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:assignment-42@example.edu\nSUMMARY:Updated title\nDTSTART:20300116T210000Z\nSEQUENCE:2\nLAST-MODIFIED:20300102T100000Z\nEND:VEVENT\nEND:VCALENDAR''';
+      const raw =
+          '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:assignment-42@example.edu\nSUMMARY:Old title\nDTSTART:20300115T200000Z\nSEQUENCE:1\nLAST-MODIFIED:20300101T100000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:assignment-42@example.edu\nSUMMARY:Updated title\nDTSTART:20300116T210000Z\nSEQUENCE:2\nLAST-MODIFIED:20300102T100000Z\nEND:VEVENT\nEND:VCALENDAR''';
 
       final result = IcsParser.parse(raw);
 
@@ -55,7 +57,8 @@ END:VCALENDAR''';
     });
 
     test('uses LAST-MODIFIED when duplicate UID sequences are equal', () {
-      const raw = '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:assignment-99@example.edu\nSUMMARY:Earlier revision\nDTSTART:20300201T120000Z\nSEQUENCE:0\nLAST-MODIFIED:20300101T080000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:assignment-99@example.edu\nSUMMARY:Later revision\nDTSTART:20300202T120000Z\nSEQUENCE:0\nLAST-MODIFIED:20300103T080000Z\nEND:VEVENT\nEND:VCALENDAR''';
+      const raw =
+          '''BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:assignment-99@example.edu\nSUMMARY:Earlier revision\nDTSTART:20300201T120000Z\nSEQUENCE:0\nLAST-MODIFIED:20300101T080000Z\nEND:VEVENT\nBEGIN:VEVENT\nUID:assignment-99@example.edu\nSUMMARY:Later revision\nDTSTART:20300202T120000Z\nSEQUENCE:0\nLAST-MODIFIED:20300103T080000Z\nEND:VEVENT\nEND:VCALENDAR''';
 
       final result = IcsParser.parse(raw);
 
