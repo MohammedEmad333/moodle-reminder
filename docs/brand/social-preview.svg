@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Moodle Reminder social preview</title>
+  <desc id="desc">Moodle Reminder branding with a calendar and notification symbol.</desc>
+  <rect width="1280" height="640" rx="48" fill="#FFF8F1"/>
+  <circle cx="1030" cy="92" r="220" fill="#F98012" opacity="0.10"/>
+  <circle cx="1130" cy="530" r="260" fill="#F98012" opacity="0.08"/>
+
+  <g transform="translate(110 135)">
+    <rect x="0" y="0" width="300" height="300" rx="76" fill="#F98012"/>
+    <rect x="62" y="76" width="176" height="154" rx="28" fill="#FFFFFF"/>
+    <rect x="89" y="44" width="20" height="58" rx="10" fill="#FFFFFF"/>
+    <rect x="191" y="44" width="20" height="58" rx="10" fill="#FFFFFF"/>
+    <rect x="92" y="128" width="116" height="12" rx="6" fill="#F98012"/>
+    <rect x="92" y="165" width="90" height="12" rx="6" fill="#F98012"/>
+    <circle cx="218" cy="210" r="55" fill="#4A3F37"/>
+    <path d="M218 178c-15 0-25 12-25 28v14h50v-14c0-16-10-28-25-28z" fill="#FFFFFF"/>
+    <rect x="188" y="220" width="60" height="10" rx="5" fill="#FFFFFF"/>
+    <path d="M210 233h16c0 10-3 15-8 15s-8-5-8-15z" fill="#FFFFFF"/>
+  </g>
+
+  <g font-family="Inter, Arial, sans-serif" fill="#342D28">
+    <text x="500" y="245" font-size="74" font-weight="800">Moodle Reminder</text>
+    <text x="505" y="315" font-size="30" font-weight="500" fill="#6A5C53">Never miss a Moodle deadline.</text>
+    <text x="505" y="370" font-size="25" fill="#7B6B61">Private calendar sync · Offline cache · Local reminders</text>
+    <text x="505" y="412" font-size="25" fill="#7B6B61">Arabic &amp; English · Flutter · Android</text>
+  </g>
+
+  <rect x="505" y="458" width="228" height="54" rx="27" fill="#F98012"/>
+  <text x="619" y="493" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="700" fill="#FFFFFF">Privacy-friendly</text>
+</svg>
