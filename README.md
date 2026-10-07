@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/brand/moodle-reminder-banner.svg" alt="Moodle Reminder — never miss a Moodle deadline again" width="100%" />
+
 # Moodle Reminder
 
 **A privacy-friendly Flutter companion for Moodle deadlines, background calendar sync, and reliable local reminders.**
