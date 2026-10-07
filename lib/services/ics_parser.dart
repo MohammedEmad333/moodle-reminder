@@ -13,7 +13,7 @@ class IcsParser {
     _ensureTimeZones();
 
     final lines = _unfold(raw).split(RegExp(r'\r?\n'));
-    final deadlines = <Deadline>[];
+    final parsed = <Deadline>[];
 
     var inEvent = false;
     final values = <String, String>{};
@@ -30,7 +30,7 @@ class IcsParser {
       if (line == 'END:VEVENT') {
         if (inEvent) {
           final deadline = _buildDeadline(values, keyParts);
-          if (deadline != null) deadlines.add(deadline);
+          if (deadline != null) parsed.add(deadline);
         }
         inEvent = false;
         continue;
@@ -50,7 +50,19 @@ class IcsParser {
       keyParts.putIfAbsent(key, () => keyPart);
     }
 
-    deadlines.sort((a, b) => a.due.compareTo(b.due));
+    // Moodle UIDs are stable across calendar refreshes. If a feed contains
+    // multiple revisions of the same VEVENT, keep only the newest revision.
+    final byStableKey = <String, Deadline>{};
+    for (final deadline in parsed) {
+      final key = deadline.stableKey;
+      final existing = byStableKey[key];
+      if (existing == null || _isNewerRevision(deadline, existing)) {
+        byStableKey[key] = deadline;
+      }
+    }
+
+    final deadlines = byStableKey.values.toList()
+      ..sort((a, b) => a.due.compareTo(b.due));
     return deadlines;
   }
 
@@ -70,7 +82,7 @@ class IcsParser {
       title: title,
       due: due,
       description: _clean(values['DESCRIPTION'] ?? ''),
-      course: _clean(values['CATEGORIES'] ?? '').split(',').first.trim(),
+      course: _normalizeCourse(_clean(values['CATEGORIES'] ?? '')),
       url: _clean(values['URL'] ?? ''),
       location: _clean(values['LOCATION'] ?? ''),
       status: _clean(values['STATUS'] ?? ''),
@@ -80,6 +92,33 @@ class IcsParser {
         keyParts['LAST-MODIFIED'],
       ),
     );
+  }
+
+  static bool _isNewerRevision(Deadline candidate, Deadline current) {
+    if (candidate.sequence != current.sequence) {
+      return candidate.sequence > current.sequence;
+    }
+
+    final candidateModified = candidate.lastModified;
+    final currentModified = current.lastModified;
+    if (candidateModified != null && currentModified != null) {
+      return candidateModified.isAfter(currentModified);
+    }
+    if (candidateModified != null && currentModified == null) return true;
+    if (candidateModified == null && currentModified != null) return false;
+
+    // Some Moodle feeds don't include SEQUENCE/LAST-MODIFIED. In that case,
+    // prefer the later occurrence because it is normally the latest export.
+    return true;
+  }
+
+  static String _normalizeCourse(String raw) {
+    if (raw.isEmpty) return '';
+    final first = raw.split(',').first.trim();
+
+    // Al-Aqsa/Moodle exports may append an internal numeric suffix such as
+    // "تصميم منطق الحاسوب_176". Keep the human-readable course name only.
+    return first.replaceFirst(RegExp(r'_\d+$'), '').trim();
   }
 
   static void _ensureTimeZones() {
