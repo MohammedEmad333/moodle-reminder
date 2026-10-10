@@ -674,8 +674,9 @@ class _HomeShellState extends State<HomeShell> {
                     final uri = Uri.tryParse(deadline.url);
                     if (uri == null ||
                         (uri.scheme != 'https' && uri.scheme != 'http') ||
-                        !uri.hasAuthority)
+                        !uri.hasAuthority) {
                       return;
+                    }
                     final opened = await launchUrl(
                       uri,
                       mode: LaunchMode.externalApplication,
