@@ -64,10 +64,7 @@ END:VCALENDAR''';
 
       expect(result, hasLength(1));
       expect(result.single.title, 'Later revision');
-      expect(
-        result.single.lastModified?.toUtc(),
-        DateTime.utc(2030, 1, 3, 8),
-      );
+      expect(result.single.lastModified?.toUtc(), DateTime.utc(2030, 1, 3, 8));
     });
 
     test('unfolds continuation lines', () {
