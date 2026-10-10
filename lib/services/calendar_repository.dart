@@ -112,11 +112,8 @@ class CalendarRepository {
       );
     }
 
-    final upcoming =
-        IcsParser.parse(
-            response.body,
-          ).toList()
-          ..sort((a, b) => a.due.compareTo(b.due));
+    final upcoming = IcsParser.parse(response.body).toList()
+      ..sort((a, b) => a.due.compareTo(b.due));
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
