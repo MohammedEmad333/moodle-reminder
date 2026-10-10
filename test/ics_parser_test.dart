@@ -4,7 +4,8 @@ import 'package:moodle_reminder/services/ics_parser.dart';
 void main() {
   group('IcsParser', () {
     test('parses Moodle metadata and UTC dates', () {
-      const raw = '''BEGIN:VCALENDAR\r
+      const raw =
+          '''BEGIN:VCALENDAR\r
 BEGIN:VEVENT\r
 UID:assignment-42@example.edu\r
 SUMMARY:Assignment 2 is due\r
