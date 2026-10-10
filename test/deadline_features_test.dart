@@ -22,8 +22,10 @@ void main() {
     expect(filterDeadlines([math, physics], query: 'QUIZ'), [physics]);
     expect(filterDeadlines([math, physics], course: 'Math'), [math]);
     expect(filterDeadlines([math, physics], query: 'math'), [math]);
-    expect(filterDeadlines([math, physics], course: 'Physics', query: 'math'),
-        isEmpty);
+    expect(
+      filterDeadlines([math, physics], course: 'Physics', query: 'math'),
+      isEmpty,
+    );
   });
 
   test('overdue deadlines can be identified without wall clock coupling', () {
@@ -32,7 +34,9 @@ void main() {
   });
 
   test('per-task offsets override defaults and deduplicate', () {
-    final overrides = <String, List<int>>{'a': [6, 6, 1]};
+    final overrides = <String, List<int>>{
+      'a': [6, 6, 1],
+    };
     expect(offsetsForDeadline(math, [24], overrides), [6, 1]);
     expect(offsetsForDeadline(physics, [24], overrides), [24]);
     expect(offsetsForDeadline(math, [24], {'a': []}), isEmpty);
@@ -44,12 +48,7 @@ void main() {
       title: 'Soon',
       due: now.add(const Duration(hours: 2)),
     );
-    final times = upcomingReminderTimes(
-      deadline,
-      [24, 1],
-      {},
-      now: now,
-    );
+    final times = upcomingReminderTimes(deadline, [24, 1], {}, now: now);
     expect(times, [
       now.add(const Duration(hours: 1)),
       now.add(const Duration(hours: 2)),
@@ -58,9 +57,6 @@ void main() {
 
   test('no alerts are scheduled for expired deadline', () {
     final overdue = Deadline(uid: 'old', title: 'Old', due: now);
-    expect(
-      upcomingReminderTimes(overdue, [24], {}, now: now),
-      isEmpty,
-    );
+    expect(upcomingReminderTimes(overdue, [24], {}, now: now), isEmpty);
   });
 }
