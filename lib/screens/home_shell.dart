@@ -112,7 +112,11 @@ class _HomeShellState extends State<HomeShell> {
   Widget _home() {
     final controller = widget.controller;
     final active = controller.activeDeadlines;
-    final deadlines = filterDeadlines(active, query: _searchQuery, course: _selectedCourse);
+    final deadlines = filterDeadlines(
+      active,
+      query: _searchQuery,
+      course: _selectedCourse,
+    );
     final overdue = deadlines.where((d) => d.isPast).toList();
     final upcoming = deadlines.where((d) => !d.isPast).toList();
     final next = upcoming.isEmpty ? null : upcoming.first;
@@ -161,11 +165,20 @@ class _HomeShellState extends State<HomeShell> {
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
             initialValue: _selectedCourse ?? '',
-            decoration: InputDecoration(labelText: t('Filter by course', 'تصفية حسب المساق')),
+            decoration: InputDecoration(
+              labelText: t('Filter by course', 'تصفية حسب المساق'),
+            ),
             items: [
-              DropdownMenuItem(value: '', child: Text(t('All courses', 'كل المساقات'))),
-              ...({...active.map((d) => d.course)}.where((c) => c.isNotEmpty).toList()..sort())
-                  .map((course) => DropdownMenuItem(value: course, child: Text(course))),
+              DropdownMenuItem(
+                value: '',
+                child: Text(t('All courses', 'كل المساقات')),
+              ),
+              ...({
+                ...active.map((d) => d.course),
+              }.where((c) => c.isNotEmpty).toList()..sort()).map(
+                (course) =>
+                    DropdownMenuItem(value: course, child: Text(course)),
+              ),
             ],
             onChanged: (value) => setState(() {
               _selectedCourse = value == null || value.isEmpty ? null : value;
@@ -209,7 +222,9 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Widget _calendar() {
-    final active = widget.controller.activeDeadlines.where((d) => !d.isPast).toList();
+    final active = widget.controller.activeDeadlines
+        .where((d) => !d.isPast)
+        .toList();
     final items = active.where((deadline) {
       final d = deadline.due;
       return d.year == _selectedDate.year &&
@@ -612,19 +627,28 @@ class _HomeShellState extends State<HomeShell> {
               Wrap(
                 spacing: 8,
                 children: [1, 6, 24, 48, 72].map((hours) {
-                  final specific = widget.controller.taskReminderOffsets[deadline.stableKey];
-                  final selected = (specific ?? widget.controller.reminderOffsets).contains(hours);
+                  final specific =
+                      widget.controller.taskReminderOffsets[deadline.stableKey];
+                  final selected =
+                      (specific ?? widget.controller.reminderOffsets).contains(
+                        hours,
+                      );
                   return FilterChip(
                     label: Text(_offsetLabel(hours)),
                     selected: selected,
                     onSelected: (checked) async {
-                      final values = [...(specific ?? widget.controller.reminderOffsets)];
+                      final values = [
+                        ...(specific ?? widget.controller.reminderOffsets),
+                      ];
                       if (checked) {
                         values.add(hours);
                       } else {
                         values.remove(hours);
                       }
-                      await widget.controller.setTaskReminderOffsets(deadline, values);
+                      await widget.controller.setTaskReminderOffsets(
+                        deadline,
+                        values,
+                      );
                       if (context.mounted) Navigator.pop(context);
                       if (mounted) _showDeadline(deadline);
                     },
@@ -633,11 +657,16 @@ class _HomeShellState extends State<HomeShell> {
               ),
               TextButton(
                 onPressed: () async {
-                  await widget.controller.setTaskReminderOffsets(deadline, null);
+                  await widget.controller.setTaskReminderOffsets(
+                    deadline,
+                    null,
+                  );
                   if (context.mounted) Navigator.pop(context);
                   if (mounted) _showDeadline(deadline);
                 },
-                child: Text(t('Use global reminders', 'استخدام التذكيرات العامة')),
+                child: Text(
+                  t('Use global reminders', 'استخدام التذكيرات العامة'),
+                ),
               ),
               if (deadline.url.isNotEmpty) ...[
                 OutlinedButton.icon(
@@ -645,11 +674,22 @@ class _HomeShellState extends State<HomeShell> {
                     final uri = Uri.tryParse(deadline.url);
                     if (uri == null ||
                         (uri.scheme != 'https' && uri.scheme != 'http') ||
-                        !uri.hasAuthority) return;
-                    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        !uri.hasAuthority)
+                      return;
+                    final opened = await launchUrl(
+                      uri,
+                      mode: LaunchMode.externalApplication,
+                    );
                     if (!opened && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(t('Could not open Moodle link', 'تعذر فتح رابط Moodle'))),
+                        SnackBar(
+                          content: Text(
+                            t(
+                              'Could not open Moodle link',
+                              'تعذر فتح رابط Moodle',
+                            ),
+                          ),
+                        ),
                       );
                     }
                   },
